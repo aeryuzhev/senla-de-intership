@@ -8,10 +8,6 @@
 
 ...
 
-## Overview
-
-...
-
 ## Result
 
-...
+[data_mart.csv](data/data_mart.csv)
