@@ -123,21 +123,18 @@ copy (
     -- -------------------------------
     cte_aggregated_transactions_by_decade as (
         select
-            t.part_date,
             t.month_decade,
             t.customer_id,        
             sum(coalesce(t.price, 0)) as transaction_amount     
         from
             cte_filtered_transactions t 
         group by
-            t.part_date,
             t.month_decade,
             t.customer_id        
     ),
     -- -------------------------------
     cte_ranked_transactions_by_decade as (
         select
-            t.part_date,
             t.month_decade,
             t.customer_id,
             row_number() over (
