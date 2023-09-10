@@ -5,7 +5,7 @@ create table stg_transactions (
     t_dat             date,
     customer_id       text,
     article_id        integer,
-    price             numeric(10, 6),
+    price             numeric(19, 18),
     sales_channel_id  smallint
 );
 -- -------------------------------------------------------------------------------------
