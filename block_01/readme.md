@@ -2,12 +2,34 @@
 
 ## Description
 
-...
+The final task in block 01 is to create a data mart. It must consists of the following columns:
+
+| Field name               | Description                                            |
+| ------------------------ | ------------------------------------------------------ |
+| part_date                | The last day of the month                              |
+| customer_id              | Customer ID                                            |
+| customer_group_by_age    | Customers age classification                           |
+| transaction_amount       | Total sum of purchases                                 |
+| most_exp_article_id      | The most expensive article                             |
+| number_of_articles       | The number of articles                                 |
+| number_of_product_groups | The number of product groups                           |
+| most_active_decade       | The part of the month with the most purchases          |
+| customer_loyalty         | Customers loyality based on purchases in prior months |
+
+## Technologies
+
+- PostgreSQL
 
 ## Data sources
 
-...
+Kaggle - H&M Personalized Fashion Recommendations:
+
+- [articles.csv](https://www.kaggle.com/competitions/h-and-m-personalized-fashion-recommendations/data?select=articles.csv)
+- [customers.csv](https://www.kaggle.com/competitions/h-and-m-personalized-fashion-recommendations/data?select=articles.csv)
+- [transactions_train.csv](https://www.kaggle.com/competitions/h-and-m-personalized-fashion-recommendations/data?select=articles.csv)
 
 ## Result
 
-[data_mart.csv](data/data_mart.csv)
+Data mart with aggregated and enriched transactions:
+
+- [data_mart.csv](data/data_mart.csv)
