@@ -15,7 +15,7 @@ create table dm_transactions_by_month as
             count(t.customer_id) over (
                 partition by t.customer_id 
                 order by t.part_date 
-                rows between 2 preceding and 1 preceding
+                range between interval '2' month preceding and interval '1' month preceding
             ) as prior_months_count,
             min(t.part_date) over () as min_part_date,
             a.article_id as most_exp_article_id,
@@ -31,7 +31,7 @@ create table dm_transactions_by_month as
                 and d.part_date = t.part_date
     )
     select
-        t.part_date,
+        (t.part_date + interval '1 month - 1 day')::date as part_date,
         t.customer_id,
         t.customer_group_by_age, 
         t.transaction_amount,
@@ -40,12 +40,12 @@ create table dm_transactions_by_month as
         t.number_of_product_groups,
         t.most_active_decade,
         case 
+            when t.prior_months_count = 2 
+                then 1        
             when t.part_date = t.min_part_date 
                 then 1
-            when date_part('month', t.part_date) - date_part('month', t.min_part_date) = 1 
+            when (t.part_date - interval '1 month')::date = t.min_part_date
                 then coalesce(t.prior_months_count, 0)
-            when t.prior_months_count = 2 
-                then 1
             else 0
         end as customer_loyalty  
     from

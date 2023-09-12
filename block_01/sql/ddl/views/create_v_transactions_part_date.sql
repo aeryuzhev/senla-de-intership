@@ -7,7 +7,7 @@ create view v_transactions_part_date as
         t.customer_id,
         t.article_id,
         t.price,
-        (date_trunc('month', t.t_dat) + interval '1 month - 1 day')::date as part_date,
+        date_trunc('month', t.t_dat)::date as part_date,
         case    
             when extract('day' from t.t_dat) <= 10 then 1
             when extract('day' from t.t_dat) <= 20 then 2
