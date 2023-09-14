@@ -13,6 +13,6 @@ copy (
     from
         dm_transactions_by_month t
     where
-        t.part_date = '2018-10-31'
+        t.part_date = (:part_date)::date
 ) to '/home/aerik/learning/code/senla-de-intership/block_01/data/data_mart.csv' csv header;
 -- -------------------------------------------------------------------------------------
