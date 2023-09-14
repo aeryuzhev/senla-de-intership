@@ -44,6 +44,6 @@ psql -h <host> -U <user> -p <port> -d <database> -a -f full_elt.sql
 
 ## Result
 
-**month_elt.sql** -- a csv file [data_mart.csv](data/data_mart.csv)
+**month_elt.sql** - a csv file [data_mart.csv](data/data_mart.csv)
 
-**full_elt.sql** -- a table dm_transactions_by_month
+**full_elt.sql** - a table dm_transactions_by_month
