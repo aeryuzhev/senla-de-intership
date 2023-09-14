@@ -9,7 +9,7 @@ create materialized view mv_aggregated_transactions_by_month as
         count(t.article_id) as number_of_articles,
         count(distinct a.product_group_name) as number_of_product_groups  
     from
-        v_transactions_part_date t
+        v_transactions_part_date_full t
         join stg_articles a on a.article_id = t.article_id
     group by
         t.part_date,
