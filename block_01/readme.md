@@ -28,8 +28,22 @@ Kaggle - H&M Personalized Fashion Recommendations:
 - [customers.csv](https://www.kaggle.com/competitions/h-and-m-personalized-fashion-recommendations/data?select=articles.csv)
 - [transactions_train.csv](https://www.kaggle.com/competitions/h-and-m-personalized-fashion-recommendations/data?select=articles.csv)
 
+## Usage
+
+**month_elt.sql** - creates a csv file with data for one month.
+
+```bash
+psql -h <host> -U <user> -p <port> -d <database> -a -f month_elt.sql -v part_date="'<date>'"
+```
+
+**full_elt.sql** - creates a data mart table for all period.
+
+```bash
+psql -h <host> -U <user> -p <port> -d <database> -a -f full_elt.sql
+```
+
 ## Result
 
-Data mart with aggregated and enriched transactions:
+**month_elt.sql** -- a csv file [data_mart.csv](data/data_mart.csv)
 
-- [data_mart.csv](data/data_mart.csv)
+**full_elt.sql** -- a table dm_transactions_by_month
