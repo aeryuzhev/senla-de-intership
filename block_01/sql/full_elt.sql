@@ -2,7 +2,7 @@
 drop materialized view if exists mv_aggregated_transactions_by_month;
 drop materialized view if exists mv_most_expensive_articles;
 drop materialized view if exists mv_most_active_month_decades;
-drop view if exists v_transactions_part_date;
+drop view if exists v_transactions_part_date_full;
 -- -------------------------------------------------------------------------------------
 drop table if exists stg_articles;
 -- -------------------------------------------------------------------------------------
@@ -80,7 +80,7 @@ with (
     header true
 );
 -- --------------------------------------------------------------------------------------
-create view v_transactions_part_date as
+create view v_transactions_part_date_full as
     select      
         t.t_dat as transaction_date,
         t.customer_id,
@@ -103,7 +103,7 @@ create materialized view mv_aggregated_transactions_by_month as
         count(t.article_id) as number_of_articles,
         count(distinct a.product_group_name) as number_of_product_groups  
     from
-        v_transactions_part_date t
+        v_transactions_part_date_full t
         join stg_articles a on a.article_id = t.article_id
     group by
         t.part_date,
@@ -120,7 +120,7 @@ create materialized view mv_most_expensive_articles as
                 order by t.price desc, t.transaction_date
             ) as price_rank
         from
-            v_transactions_part_date t
+            v_transactions_part_date_full t
     )
     select
         r.part_date,
@@ -139,7 +139,7 @@ create materialized view mv_most_active_month_decades as
             t.customer_id,
             sum(coalesce(t.price, 0)) as transaction_amount
         from
-            v_transactions_part_date t
+            v_transactions_part_date_full t
         group by
             t.part_date,
             t.month_decade,
@@ -221,22 +221,5 @@ create table dm_transactions_by_month as
 drop materialized view if exists mv_aggregated_transactions_by_month;
 drop materialized view if exists mv_most_expensive_articles;
 drop materialized view if exists mv_most_active_month_decades;
-drop view if exists v_transactions_part_date;
--- -------------------------------------------------------------------------------------
-copy (
-    select
-        t.part_date,
-        t.customer_id,
-        t.customer_group_by_age, 
-        t.transaction_amount,
-        t.most_exp_article_id,
-        t.number_of_articles,
-        t.number_of_product_groups,
-        t.most_active_decade,
-        t.customer_loyalty      
-    from
-        dm_transactions_by_month t
-    where
-        t.part_date = '2018-12-31'
-) to '/home/aerik/learning/code/senla-de-intership/block_01/data/data_mart.csv' csv header;
+drop view if exists v_transactions_part_date_full;
 -- -------------------------------------------------------------------------------------
