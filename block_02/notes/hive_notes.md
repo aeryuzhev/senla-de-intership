@@ -103,7 +103,7 @@ group by
 -- -------------------------------------------------------------------------------------   
 ```
 
-Check the imported and joined data:
+Check the imported data:
 
 ```bash
 hdfs dfs -cat /user/hive/warehouse/transactions/transactions.csv | head
