@@ -1,33 +1,6 @@
 # Hive
 
-## Cloudera quickstart docker
-
-Import the Cloudera QuickStart image from Docker Hub:
-
-```bash
-docker pull cloudera/quickstart:latest
-```
-
-List docker images:
-
-```bash
-docker images
-```
-
-Take image ID:
-
-```bash
-REPOSITORY            TAG       IMAGE ID       CREATED       SIZE
-cloudera/quickstart   latest    4239cd2958c6   7 years ago   6.34GB
-```
-
-Run docker image (includes Hadoop, Hive, Spark and HBase):
-
-```bash
-docker run --hostname=quickstart.cloudera --privileged=true -t -i -p 8888:8888 -p 7180:7180 -p 80:80 4239cd2958c6 /usr/bin/docker-quickstart
-```
-
-## HQL examples
+## HiveQL examples
 
 First enter Hive CLI:
 
@@ -36,7 +9,7 @@ First enter Hive CLI:
 hive
 ```
 
-Then do some HQL commands (in Hive CLI):
+Then execute some HiveQL commands (in Hive CLI):
 
 ```sql
 -- -------------------------------------------------------------------------------------
@@ -110,7 +83,7 @@ hdfs dfs -cat /user/hive/warehouse/transactions/transactions.csv | head
 hdfs dfs -cat /user/hive/warehouse/customers/customers.csv | head
 ```
 
-Finally do some HQL DML queries (in Hive CLI):
+Finally execute some HiveQL DML queries (in Hive CLI):
 
 ```sql
 -- -------------------------------
