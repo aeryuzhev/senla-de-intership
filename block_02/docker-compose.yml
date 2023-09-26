@@ -1,9 +1,8 @@
-version: "3.8"
+version: "3"
 
 services:
   jupyter-pyspark-notebook:
-    build:
-      dockerfile: ./Dockerfile
+    build: .
     container_name: jupyter-pyspark-notebook
     ports:
       - 8888:8888
