@@ -1,7 +1,4 @@
-block_01/data/transactions_train.csv
-block_01/data/articles.csv
-block_01/data/customers.csv
-block_02/data/transactions_train.csv
-block_02/data/articles.csv
-block_02/data/customers.csv
-block_02/notebooks/.ipynb_checkpoints
+transactions_train.csv
+articles.csv
+customers.csv
+.ipynb_checkpoints
