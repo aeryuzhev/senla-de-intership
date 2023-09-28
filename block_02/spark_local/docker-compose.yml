@@ -1,0 +1,17 @@
+version: "3"
+
+services:
+  jupyter-pyspark-local:
+    build:
+      context: ./jupyter_docker
+      dockerfile: Dockerfile
+    container_name: jupyter-pyspark-local
+    ports:
+      - 8888:8888
+      - 4040:4040
+    volumes:
+      - ./data:/home/jovyan/work/data
+      - ./notebooks:/home/jovyan/work/notebooks
+    restart: always
+    tty: true
+    stdin_open: true
