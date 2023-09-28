@@ -16,6 +16,7 @@ services:
   spark-master:
     image: bitnami/spark:3.3.3
     container_name: spark-master
+    user: root
     environment:
       - SPARK_MODE=master
       - SPARK_RPC_AUTHENTICATION_ENABLED=no
@@ -28,6 +29,7 @@ services:
       - ./data:/home/jovyan/work/data
   spark-worker:
     image: bitnami/spark:3.3.3
+    user: root
     environment:
       - SPARK_MODE=worker
       - SPARK_MASTER_URL=spark://spark-master:7077
