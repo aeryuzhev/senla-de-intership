@@ -1,17 +1,20 @@
 version: "3"
 
 services:
-  jupyter-pyspark-notebook:
-    build: .
-    container_name: jupyter-pyspark-notebook
+  jupyter-pyspark-cluster:
+    build:
+      context: ./jupyter_docker
+      dockerfile: Dockerfile
+    container_name: jupyter-pyspark-cluster
     ports:
       - 8888:8888
+      - 4040:4040
     command: "start-notebook.sh --NotebookApp.token='' --NotebookApp.password=''"
     volumes:
       - ./data:/home/jovyan/work/data
       - ./notebooks:/home/jovyan/work/notebooks
   spark-master:
-    image: docker.io/bitnami/spark:3.3.3
+    image: bitnami/spark:3.3.3
     container_name: spark-master
     environment:
       - SPARK_MODE=master
@@ -21,11 +24,10 @@ services:
       - SPARK_SSL_ENABLED=no
     ports:
       - 8080:8080
-      - 7077:7077
     volumes:
       - ./data:/home/jovyan/work/data
   spark-worker:
-    image: docker.io/bitnami/spark:3.3.3
+    image: bitnami/spark:3.3.3
     environment:
       - SPARK_MODE=worker
       - SPARK_MASTER_URL=spark://spark-master:7077
