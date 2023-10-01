@@ -105,7 +105,8 @@ def extract_transactions(spark: SparkSession, args: dict) -> DataFrame:
     )
 
     df = (
-        spark.read.format("csv")
+        spark.read
+        .format("csv")
         .schema(schema)
         .option("header", "true")
         .option("delimiter", ",")
@@ -156,7 +157,8 @@ def extract_articles(spark: SparkSession, args: dict) -> DataFrame:
     )
 
     df = (
-        spark.read.format("csv")
+        spark.read
+        .format("csv")
         .schema(schema)
         .option("header", "true")
         .option("delimiter", ",")
@@ -189,7 +191,8 @@ def extract_customers(spark: SparkSession, args: dict) -> DataFrame:
     )
 
     df = (
-        spark.read.format("csv")
+        spark.read
+        .format("csv")
         .schema(schema)
         .option("header", "true")
         .option("delimiter", ",")
@@ -245,7 +248,8 @@ def transform_data(
     )
 
     transformed_transactions_df = (
-        enriched_transactions_df.withColumn(
+        enriched_transactions_df
+        .withColumn(
             "customer_group_by_age",
             F.when(F.col("age") < 23, "S")
             .when(F.col("age") < 60, "A")
@@ -269,7 +273,8 @@ def transform_data(
     )
 
     aggregated_transactions_df = (
-        transformed_transactions_df.groupBy(
+        transformed_transactions_df
+        .groupBy(
             "part_date",
             "customer_id",
             "customer_group_by_age",
@@ -315,7 +320,8 @@ def load_data(
         )
     else:
         (
-            transformed_df.coalesce(1)
+            transformed_df
+            .coalesce(1)
             .write.mode("overwrite")
             .format("csv")
             .option("header", "true")
