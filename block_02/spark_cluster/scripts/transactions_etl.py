@@ -7,8 +7,8 @@ This Python module extracts data from the following data sources:
 Link to the data sources:
     https://www.kaggle.com/competitions/h-and-m-personalized-fashion-recommendations
 
-Period for transactions is based on the month of the --date parameter (i.e. when
---date = 2018-12-16 then the period for transactions will be from 2018-12-01
+Period for transactions is based on the month of the --part-date parameter (i.e. when
+--part-date = 2018-12-16 then the period for transactions will be from 2018-12-01
 to 2018-12-31 inclusively).
 
 After extracting it transforms the data and loads it into a data_mart.csv with
@@ -24,8 +24,8 @@ the following fields:
     | number_of_product_groups | The number of product groups |
 
 Args:
-    --date: Date in YYYY-MM-DD format. Period for transactions data will be formed based
-            on the month of this date.
+    --part-date: Date in YYYY-MM-DD format. Period for transactions data will be formed
+                 based on the month of this date.
     --data-dir: Path to the directory with source files (transactions_train.csv,
                 articles.csv, customers.csv) and for the output file.
 
@@ -33,7 +33,7 @@ Example:
     ${SPARK_HOME}/bin/spark-submit \
         --master spark://spark-master:7077 \
         /home/jovyan/work/scripts/transactions_etl.py \
-            --date="2018-12-31" \
+            --part-date="2018-12-31" \
             --data-dir="/home/jovyan/work/data"
 """
 
@@ -347,10 +347,10 @@ def get_args() -> dict:
     parser = argparse.ArgumentParser()
 
     parser.add_argument(
-        "--date",
+        "--part-date",
         type=str,
         required=True,
-        metavar="<date>",
+        metavar="<part_date>",
         help=(
             "Date in YYYY-MM-DD format. Period for transactions will be formed based on "
             "the month of this date"
@@ -371,7 +371,7 @@ def get_args() -> dict:
     print(args)
 
     # Get the last and the first day from the date param.
-    date_param = datetime.strptime(args["date"], "%Y-%m-%d")
+    date_param = datetime.strptime(args["part_date"], "%Y-%m-%d")
     args["date_start"] = date_param + relativedelta(day=1)
     args["date_end"] = date_param + relativedelta(day=31)
 
