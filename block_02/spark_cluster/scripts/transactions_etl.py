@@ -31,7 +31,6 @@ Args:
 
 Example:
     ${SPARK_HOME}/bin/spark-submit \
-        --master spark://spark-master:7077 \
         /home/jovyan/work/scripts/transactions_etl.py \
             --part-date="2018-12-31" \
             --data-dir="/home/jovyan/work/data"
@@ -42,8 +41,23 @@ from dateutil.relativedelta import relativedelta
 import argparse
 
 from pyspark.sql import SparkSession, DataFrame
-from pyspark.sql import types as T
-from pyspark.sql import functions as F
+from pyspark.sql.types import (
+    StructType,
+    StructField,
+    DateType,
+    StringType,
+    IntegerType,
+    DecimalType,
+)
+from pyspark.sql.functions import (
+    col,
+    when,
+    first,
+    last_day,
+    sum,
+    count,
+    countDistinct,
+)
 from pyspark.sql.window import Window
 
 
@@ -54,6 +68,18 @@ def main() -> None:
         None.
     """
     args = get_args()
+
+    # Add the last and the first day from the date param to the args dict.
+    date_param = datetime.strptime(args["part_date"], "%Y-%m-%d")
+    args["date_start"] = date_param + relativedelta(day=1)
+    args["date_end"] = date_param + relativedelta(day=31)
+
+    # Add filepaths for the input and output files to the args dict.
+    data_dir_path = args["data_dir"]
+    args["transactions_filepath"] = f"{data_dir_path}/transactions_train.csv"
+    args["articles_filepath"] = f"{data_dir_path}/articles.csv"
+    args["customers_filepath"] = f"{data_dir_path}/customers.csv"
+    args["data_mart_filepath"] = f"{data_dir_path}/data_mart.csv"
 
     spark = initialize_spark()
 
@@ -94,13 +120,13 @@ def extract_transactions(spark: SparkSession, args: dict) -> DataFrame:
     Returns:
         Spark dataframe.
     """
-    schema = T.StructType(
+    schema = StructType(
         [
-            T.StructField("t_dat", T.DateType(), True),
-            T.StructField("customer_id", T.StringType(), True),
-            T.StructField("article_id", T.IntegerType(), True),
-            T.StructField("price", T.DecimalType(22, 20), True),
-            T.StructField("sales_channel_id", T.IntegerType(), True),
+            StructField("t_dat", DateType(), True),
+            StructField("customer_id", StringType(), True),
+            StructField("article_id", IntegerType(), True),
+            StructField("price", DecimalType(22, 20), True),
+            StructField("sales_channel_id", IntegerType(), True),
         ]
     )
 
@@ -126,33 +152,33 @@ def extract_articles(spark: SparkSession, args: dict) -> DataFrame:
     Returns:
         Spark dataframe.
     """
-    schema = T.StructType(
+    schema = StructType(
         [
-            T.StructField("article_id", T.IntegerType(), True),
-            T.StructField("product_code", T.IntegerType(), True),
-            T.StructField("prod_name", T.StringType(), True),
-            T.StructField("product_type_no", T.IntegerType(), True),
-            T.StructField("product_type_name", T.StringType(), True),
-            T.StructField("product_group_name", T.StringType(), True),
-            T.StructField("graphical_appearance_no", T.IntegerType(), True),
-            T.StructField("graphical_appearance_name", T.StringType(), True),
-            T.StructField("colour_group_code", T.IntegerType(), True),
-            T.StructField("colour_group_name", T.StringType(), True),
-            T.StructField("perceived_colour_value_id", T.IntegerType(), True),
-            T.StructField("perceived_colour_value_name", T.StringType(), True),
-            T.StructField("perceived_colour_master_id", T.IntegerType(), True),
-            T.StructField("perceived_colour_master_name", T.StringType(), True),
-            T.StructField("department_no", T.IntegerType(), True),
-            T.StructField("department_name", T.StringType(), True),
-            T.StructField("index_code", T.StringType(), True),
-            T.StructField("index_name", T.StringType(), True),
-            T.StructField("index_group_no", T.IntegerType(), True),
-            T.StructField("index_group_name", T.StringType(), True),
-            T.StructField("section_no", T.IntegerType(), True),
-            T.StructField("section_name", T.StringType(), True),
-            T.StructField("garment_group_no", T.IntegerType(), True),
-            T.StructField("garment_group_name", T.StringType(), True),
-            T.StructField("detail_desc", T.StringType(), True),
+            StructField('article_id', IntegerType(), True),
+            StructField('product_code', IntegerType(), True),
+            StructField('prod_name', StringType(), True),
+            StructField('product_type_no', IntegerType(), True),
+            StructField('product_type_name', StringType(), True),
+            StructField('product_group_name', StringType(), True),
+            StructField('graphical_appearance_no', IntegerType(), True),
+            StructField('graphical_appearance_name', StringType(), True),
+            StructField('colour_group_code', IntegerType(), True),
+            StructField('colour_group_name', StringType(), True),
+            StructField('perceived_colour_value_id', IntegerType(), True),
+            StructField('perceived_colour_value_name', StringType(), True),
+            StructField('perceived_colour_master_id', IntegerType(), True),
+            StructField('perceived_colour_master_name', StringType(), True),
+            StructField('department_no', IntegerType(), True),
+            StructField('department_name', StringType(), True),
+            StructField('index_code', StringType(), True),
+            StructField('index_name', StringType(), True),
+            StructField('index_group_no', IntegerType(), True),
+            StructField('index_group_name', StringType(), True),
+            StructField('section_no', IntegerType(), True),
+            StructField('section_name', StringType(), True),
+            StructField('garment_group_no', IntegerType(), True),
+            StructField('garment_group_name', StringType(), True),
+            StructField('detail_desc', StringType(), True)
         ]
     )
 
@@ -178,15 +204,15 @@ def extract_customers(spark: SparkSession, args: dict) -> DataFrame:
     Returns:
         Spark dataframe.
     """
-    schema = T.StructType(
+    schema = StructType(
         [
-            T.StructField("customer_id", T.StringType(), True),
-            T.StructField("FN", T.DecimalType(2, 1), True),
-            T.StructField("Active", T.DecimalType(2, 1), True),
-            T.StructField("club_member_status", T.StringType(), True),
-            T.StructField("fashion_news_frequency", T.StringType(), True),
-            T.StructField("age", T.IntegerType(), True),
-            T.StructField("postal_code", T.StringType(), True),
+            StructField('customer_id', StringType(), True),
+            StructField('FN', DecimalType(2, 1), True),
+            StructField('Active', DecimalType(2, 1), True),
+            StructField('club_member_status', StringType(), True),
+            StructField('fashion_news_frequency', StringType(), True),
+            StructField('age', IntegerType(), True),
+            StructField('postal_code', StringType(), True)
         ]
     )
 
@@ -219,9 +245,12 @@ def transform_data(
     Returns:
         Spark dataframe.
     """
-    filtered_transactions_df = transactions_df.where(
-        (F.col("t_dat") >= args["date_start"]) &
-        (F.col("t_dat") <= args["date_end"])
+    filtered_transactions_df = (
+        transactions_df
+        .where(
+            (col("t_dat") >= args["date_start"]) &
+            (col("t_dat") <= args["date_end"])
+        )
     )
 
     enriched_transactions_df = (
@@ -242,8 +271,8 @@ def transform_data(
         Window
         .partitionBy("customer_id")
         .orderBy(
-            F.col("price").desc(),
-            F.col("t_dat").asc()
+            col("price").desc(),
+            col("t_dat").asc()
         )
     )
 
@@ -251,16 +280,16 @@ def transform_data(
         enriched_transactions_df
         .withColumn(
             "customer_group_by_age",
-            F.when(F.col("age") < 23, "S")
-            .when(F.col("age") < 60, "A")
+            when(col("age") < 23, "S")
+            .when(col("age") < 60, "A")
             .otherwise("R"),
         )
         .withColumn(
             "most_exp_article_id",
-            F.first("article_id")
+            first("article_id")
             .over(window_spec_most_expensive_article),
         )
-        .withColumn("part_date", F.last_day(F.col("t_dat")))
+        .withColumn("part_date", last_day(col("t_dat")))
         .select(
             "part_date",
             "customer_id",
@@ -281,9 +310,9 @@ def transform_data(
             "most_exp_article_id"
         )
         .agg(
-            F.sum("price").alias("transaction_amount"),
-            F.count("article_id").alias("number_of_articles"),
-            F.countDistinct("product_group_name").alias("number_of_product_groups"),
+            sum("price").alias("transaction_amount"),
+            count("article_id").alias("number_of_articles"),
+            countDistinct("product_group_name").alias("number_of_product_groups"),
         )
         .select(
             "part_date",
@@ -331,15 +360,7 @@ def load_data(
 
 
 def get_args() -> dict:
-    """Obtain arguments from the calling of the module. Use these arguments to create
-    a dictionary with the following arguments:
-        data_dir: Path to the directory with source files.
-        date_start: Start of the period for the transactions data.
-        date_end: End of the period for the transactions data.
-        transactions_filepath: Path to the source file with transactions data.
-        articles_filepath: Path to the source file with articles data.
-        customers_filepath: Path to the source file with customers data.
-        data_mart_filepath: Path to the output data_mart file.
+    """Obtain and return arguments from the calling of the script.
 
     Returns:
         Dictionary with arguments.
@@ -367,21 +388,7 @@ def get_args() -> dict:
         ),
     )
 
-    args = vars(parser.parse_args())
-    print(args)
-
-    # Get the last and the first day from the date param.
-    date_param = datetime.strptime(args["part_date"], "%Y-%m-%d")
-    args["date_start"] = date_param + relativedelta(day=1)
-    args["date_end"] = date_param + relativedelta(day=31)
-
-    data_dir_path = args["data_dir"]
-    args["transactions_filepath"] = f"{data_dir_path}/transactions_train.csv"
-    args["articles_filepath"] = f"{data_dir_path}/articles.csv"
-    args["customers_filepath"] = f"{data_dir_path}/customers.csv"
-    args["data_mart_filepath"] = f"{data_dir_path}/data_mart.csv"
-
-    return args
+    return vars(parser.parse_args())
 
 
 if __name__ == "__main__":
