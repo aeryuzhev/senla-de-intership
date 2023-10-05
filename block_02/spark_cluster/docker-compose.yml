@@ -13,6 +13,7 @@ services:
     volumes:
       - ./data:/home/jovyan/work/data
       - ./notebooks:/home/jovyan/work/notebooks
+      - ./scripts:/home/jovyan/work/scripts
   spark-master:
     image: bitnami/spark:3.3.3
     container_name: spark-master
@@ -27,13 +28,14 @@ services:
       - 8080:8080
     volumes:
       - ./data:/home/jovyan/work/data
+      - ./scripts:/home/jovyan/work/scripts
   spark-worker:
     image: bitnami/spark:3.3.3
     user: root
     environment:
       - SPARK_MODE=worker
       - SPARK_MASTER_URL=spark://spark-master:7077
-      - SPARK_WORKER_MEMORY=1G
+      - SPARK_WORKER_MEMORY=2G
       - SPARK_WORKER_CORES=1
       - SPARK_RPC_AUTHENTICATION_ENABLED=no
       - SPARK_RPC_ENCRYPTION_ENABLED=no
