@@ -31,7 +31,7 @@ Args:
 
 Example:
     ${SPARK_HOME}/bin/spark-submit \
-        /home/jovyan/work/scripts/transactions_etl.py \
+        /home/jovyan/work/scripts/task_01.py \
             --part-date="2018-12-31" \
             --data-dir="/home/jovyan/work/data"
 """
