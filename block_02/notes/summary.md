@@ -34,7 +34,7 @@ Functions of NameNode:
 - It records each change that takes place to the file system metadata. For example, if a file is deleted in HDFS, the NameNode will immediately record this in the EditLog.
 - It regularly receives a Heartbeat and a block report from all the DataNodes in the cluster to ensure that the DataNodes are live.
 - It keeps a record of all the blocks in HDFS and in which nodes these blocks are located.
-- The NameNode is also responsible to take care of the replication factor of all the blocks which we will discuss in detail later in this HDFS tutorial blog.
+- The NameNode is also responsible to take care of the replication factor of all the blocks.
 - In case of the DataNode failure, the NameNode chooses new DataNodes for new replicas, balance disk usage and manages the communication traffic to the DataNodes.
 
 **DataNodes** are the slave nodes in HDFS. Unlike NameNode, DataNode is a commodity hardware, that is, a non-expensive system which is not of high quality or high-availability.
@@ -172,7 +172,7 @@ The fundamental idea of YARN is to split up the functionalities of resource mana
 
 | | CSV | JSON | XML | Avro | Parquet | ORC |
 | --- | --- | --- | --- | --- | --- | --- |
-| Structure | Tabular, flat, comma-separated values | Key-value pairs, supports nested objects and arrays | Hierarchical, tree-like structure with tags and attributes | Binary format with schema embedded in the file | Binary format with columnar storage and schema embedded in the | Binary format with columnar storage and schema embedded in the file |
+| Structure | Tabular, flat, comma-separated values | Key-value pairs, supports nested objects and arrays | Hierarchical, tree-like structure with tags and attributes | Binary format with schema embedded in the file | Binary format with columnar storage and schema embedded in the file | Binary format with columnar storage and schema embedded in the file |
 | Binary | No | No | No | Yes | Yes | Yes |
 | Human-readable | Yes | Yes | Yes | No | No | No |
 | Metadata  | No native support, can be added externally using extensions such as CSVY or CSVW | No native support, can be added externally using extensions such as JSON-LD or GeoJSON | Supports metadata using attributes or elements within the XML document | Supports metadata by storing the schema with the data or in a separate registry | Supports metadata by storing the schema with the data or in a separate registry | Supports metadata by storing the schema with the data or in a separate registry |
