@@ -20,7 +20,16 @@ Example:
 import argparse
 
 from pyspark.sql import SparkSession, DataFrame
-from pyspark.sql.functions import col, explode, split, regexp_replace, lit, concat, lead
+from pyspark.sql.functions import (
+    col,
+    explode,
+    split,
+    regexp_replace,
+    lit,
+    concat,
+    lead,
+    lower
+)
 from pyspark.sql import Window
 
 SPLIT_PATTERN = r"[\s_]+|[^\w-'`*:$&.]+|\.\.\.*"
@@ -99,7 +108,9 @@ def split_song_lyrics_into_bigrams(song_lyrics_df: DataFrame) -> DataFrame:
         song_lyrics_df
         .withColumn("word", explode(split(col("value"), SPLIT_PATTERN)))
         .withColumn("word", regexp_replace(col("word"), REPLACE_PATTERN, ""))
+        .withColumn("word", lower(col("word")))
         .where(col("word") != "")
+        .select("word")
     )
 
     window_spec_fake_order = Window.orderBy(lit(1))
@@ -156,7 +167,7 @@ def load_data(
     """
     print("total_bigrams")
     print(bigrams_df.count())
-    print("bigrams_counts")
+    print("bigram_counts")
     counted_unique_bigrams_df.show(10, False)
 
     (

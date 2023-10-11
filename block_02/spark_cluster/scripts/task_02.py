@@ -20,7 +20,13 @@ Example:
 import argparse
 
 from pyspark.sql import SparkSession, DataFrame
-from pyspark.sql.functions import col, explode, split, regexp_replace
+from pyspark.sql.functions import (
+    col,
+    explode,
+    split,
+    regexp_replace,
+    lower
+)
 
 SPLIT_PATTERN = r"[\s_]+|[^\w-'`*:$&.]+|\.\.\.*"
 REPLACE_PATTERN = r"^\W+|\W+$"
@@ -98,7 +104,9 @@ def split_song_lyrics_into_words(song_lyrics_df: DataFrame) -> DataFrame:
         song_lyrics_df
         .withColumn("word", explode(split(col("value"), SPLIT_PATTERN)))
         .withColumn("word", regexp_replace(col("word"), REPLACE_PATTERN, ""))
+        .withColumn("word", lower(col("word")))
         .where(col("word") != "")
+        .select("word")
     )
 
     return words_df
