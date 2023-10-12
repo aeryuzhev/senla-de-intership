@@ -16,7 +16,8 @@ Example:
             --data-dir="/home/jovyan/work/data/song_lyrics" \
             --output-file="/home/jovyan/work/data/word_counts.csv"
 """
-
+import sys
+from pathlib import Path
 import argparse
 
 from pyspark.sql import SparkSession, DataFrame
@@ -39,6 +40,7 @@ def main() -> None:
         None.
     """
     args = get_args()
+    check_paths(args)
 
     spark = initialize_spark()
 
@@ -47,9 +49,29 @@ def main() -> None:
     words_df = split_song_lyrics_into_words(song_lyrics_df)
     counted_unique_words_df = count_unique_words(words_df)
 
-    load_data(words_df, counted_unique_words_df, args)
+    load_data(counted_unique_words_df, args)
 
     spark.stop()
+
+
+def check_paths(args: dict) -> None:
+    """Check for the existing of the source data directory and the output file directory.
+    Exit if paths do not exist.
+
+    Args:
+        args: Dictionary of arguments (from the get_args function).
+
+    Returns:
+        None.
+    """
+    data_dir_path = Path(args["data_dir"])
+    output_file_dir_path = Path(args["output_file"]).parent
+
+    if not data_dir_path.exists():
+        sys.exit(f"Path does not exist: {str(data_dir_path)}")
+
+    if not output_file_dir_path.exists():
+        sys.exit(f"Path does not exist: {str(output_file_dir_path)}")
 
 
 def initialize_spark() -> SparkSession:
@@ -131,26 +153,16 @@ def count_unique_words(words_df: DataFrame) -> DataFrame:
     return counted_words_df
 
 
-def load_data(
-    words_df: DataFrame,
-    counted_unique_words_df: DataFrame,
-    args: dict
-) -> None:
-    """Load results into stdout and csv file.
+def load_data(counted_unique_words_df: DataFrame, args: dict) -> None:
+    """Load results into csv file.
 
     Args:
-        words_df: Spark dataframe with separate words.
         counted_unique_words_df: Spark dataframe with counted unique words.
         args: Dictionary of arguments (from the get_args function).
 
     Returns:
         None.
     """
-    print("total_words")
-    print(words_df.count())
-    print("word_counts")
-    counted_unique_words_df.show(10, False)
-
     (
         counted_unique_words_df
         .toPandas()

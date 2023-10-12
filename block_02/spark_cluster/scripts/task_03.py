@@ -16,7 +16,8 @@ Example:
             --data-dir="/home/jovyan/work/data/song_lyrics" \
             --output-file="/home/jovyan/work/data/bigram_counts.csv"
 """
-
+import sys
+from pathlib import Path
 import argparse
 
 from pyspark.sql import SparkSession, DataFrame
@@ -43,6 +44,7 @@ def main() -> None:
         None.
     """
     args = get_args()
+    check_paths(args)
 
     spark = initialize_spark()
 
@@ -51,7 +53,7 @@ def main() -> None:
     bigrams_df = split_song_lyrics_into_bigrams(song_lyrics_df)
     counted_unique_bigrams_df = count_unique_bigrams(bigrams_df)
 
-    load_data(bigrams_df, counted_unique_bigrams_df, args)
+    load_data(counted_unique_bigrams_df, args)
 
     spark.stop()
 
@@ -72,6 +74,26 @@ def initialize_spark() -> SparkSession:
     spark.sparkContext.setLogLevel('ERROR')
 
     return spark
+
+
+def check_paths(args: dict) -> None:
+    """Check for the existing of the source data directory and the output file directory.
+    Exit if paths do not exist.
+
+    Args:
+        args: Dictionary of arguments (from the get_args function).
+
+    Returns:
+        None.
+    """
+    data_dir_path = Path(args["data_dir"])
+    output_file_dir_path = Path(args["output_file"]).parent
+
+    if not data_dir_path.exists():
+        sys.exit(f"Path does not exist: {str(data_dir_path)}")
+
+    if not output_file_dir_path.exists():
+        sys.exit(f"Path does not exist: {str(output_file_dir_path)}")
 
 
 def extract_song_lyrics(spark: SparkSession, args: dict) -> DataFrame:
@@ -150,26 +172,16 @@ def count_unique_bigrams(bigrams_df: DataFrame) -> DataFrame:
     return counted_unique_bigrams_df
 
 
-def load_data(
-    bigrams_df: DataFrame,
-    counted_unique_bigrams_df: DataFrame,
-    args: dict
-) -> None:
+def load_data(counted_unique_bigrams_df: DataFrame, args: dict) -> None:
     """Load results into stdout and csv file.
 
     Args:
-        words_df: Spark dataframe with separate words.
         counted_unique_words_df: Spark dataframe with counted unique words.
         show_count: Number of displayed rows of the dataframe. Default is 10.
 
     Returns:
         None.
     """
-    print("total_bigrams")
-    print(bigrams_df.count())
-    print("bigram_counts")
-    counted_unique_bigrams_df.show(10, False)
-
     (
         counted_unique_bigrams_df
         .toPandas()
