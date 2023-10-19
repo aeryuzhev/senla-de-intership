@@ -3,7 +3,7 @@ version: "3"
 services:
   jupyter-pyspark-cluster:
     build:
-      context: ./jupyter_docker
+      context: ./dockerfiles/jupyter
       dockerfile: Dockerfile
     container_name: jupyter-pyspark-cluster
     ports:
@@ -30,6 +30,9 @@ services:
       - ./data:/home/jovyan/work/data
       - ./scripts:/home/jovyan/work/scripts
   spark-worker:
+    build:
+      context: ./dockerfiles/spark_worker
+      dockerfile: Dockerfile
     image: bitnami/spark:3.3.3
     user: root
     environment:
