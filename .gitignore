@@ -1,5 +1,5 @@
-transactions_train.csv
+transactions_train_*.csv
 articles.csv
 customers.csv
-.ipynb_checkpoints
 song_lyrics
+.ipynb_checkpoints
