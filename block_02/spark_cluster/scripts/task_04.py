@@ -11,7 +11,7 @@ Period for transactions is based on the month of the --part-date parameter (i.e.
 --part-date = 2018-12-16 then the period for transactions will be from 2018-12-01
 to 2018-12-31 inclusively).
 
-After extracting it transforms the data and loads it into a dm_transactions_<date>.csv 
+After extracting it transforms the data and loads it into a dm_transactions_<date>.csv
 with the following fields:
     | Field name               | Description                        |
     | ------------------------ | -----------------------------------|
@@ -119,9 +119,9 @@ def check_paths(args: dict) -> None:
         None.
     """
     filepaths = (
+        args["transactions_filepath"],
         args["articles_filepath"],
         args["customers_filepath"],
-        args["data_mart_filepath"],
     )
 
     for filepath in filepaths:
