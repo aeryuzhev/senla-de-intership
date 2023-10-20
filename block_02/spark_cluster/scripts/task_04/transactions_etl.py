@@ -28,15 +28,18 @@ Args:
     --part-date: Date in YYYY-MM-DD format. Period for transactions data will be formed
                  based on the month of this date.
     --dm-currency: Currency type for price conversion.
-    --data-dir: Path to the directory with source files (transactions_train.csv,
-                articles.csv, customers.csv) and for the output file.
+    --data-dir: Path to the directory with source files (
+                transactions_train_with_currency.csv, articles.csv, customers.csv)
+                and for the output file.
+    --output-dir: Path to the output directory.
 
 Example:
     ${SPARK_HOME}/bin/spark-submit \
-        /home/jovyan/work/scripts/task_04.py \
+        /home/jovyan/work/scripts/task_04/transactions_etl.py \
             --part-date="2018-12-31" \
             --dm-currency="BYN" \
-            --data-dir="/home/jovyan/work/data"
+            --data-dir="/home/jovyan/work/data" \
+            --output-dir="/home/jovyan/work/data/dm_transactions"
 """
 import sys
 from pathlib import Path
@@ -72,13 +75,19 @@ PRICE_PRECISION, PRICE_SCALE = 22, 16
 RATE_PRECISION, RATE_SCALE = 6, 2
 
 
-def main() -> None:
+def transactions_etl_job(spark=None, args=None) -> None:
     """Main ETL function.
+
+    Args:
+        spark: SparkSession object.
+        args: Dictionary of arguments. Defaults to None.
 
     Returns:
         None.
     """
-    args = get_args()
+
+    if not args:
+        args = get_args()
 
     # Add the last and the first day from the date param to the args dict.
     date_param = datetime.strptime(args["part_date"], "%Y-%m-%d")
@@ -87,33 +96,48 @@ def main() -> None:
 
     # Add filepaths for the input and output files to the args dict.
     data_dir_path = args["data_dir"]
-    date_end_str = args['date_end'].strftime('%Y_%m_%d')
-    args["transactions_filepath"] = \
+    output_dir_path = args["output_dir"]
+    date_end_str = args['date_end'].strftime('%Y-%m-%d')
+
+    args["transactions_filepath"] = (
         f"{data_dir_path}/transactions_train_with_currency.csv"
+    )
     args["articles_filepath"] = f"{data_dir_path}/articles.csv"
     args["customers_filepath"] = f"{data_dir_path}/customers.csv"
-    args["data_mart_filepath"] = f"{data_dir_path}/dm_transactions_{date_end_str}.csv"
+    args["data_mart_filepath"] = f"{output_dir_path}/{date_end_str}.csv"
 
     check_paths(args)
 
-    spark = initialize_spark()
+    if not spark:
+        spark = initialize_spark()
+        is_external_spark_session = False
+    else:
+        is_external_spark_session = True
 
     transactions_df = extract_transactions(spark, args)
     articles_df = extract_articles(spark, args)
     customers_df = extract_customers(spark, args)
 
-    transformed_data = transform_data(transactions_df, articles_df, customers_df, args)
+    filtered_transactions_df = filter_transactions(spark, transactions_df, args)
+    transformed_data = transform_data(
+        filtered_transactions_df,
+        articles_df,
+        customers_df,
+        args,
+    )
 
     load_data(transformed_data, args)
 
-    spark.stop()
+    if not is_external_spark_session:
+        spark.stop()
 
 
 def check_paths(args: dict) -> None:
-    """Check for the source files. Exit if files do not exist.
+    """Check for the source files and for the output file directory.
+    Exit if files do not exist.
 
     Args:
-        args: Dictionary of arguments (from the get_args function).
+        args: Dictionary of arguments.
 
     Returns:
         None.
@@ -122,6 +146,7 @@ def check_paths(args: dict) -> None:
         args["transactions_filepath"],
         args["articles_filepath"],
         args["customers_filepath"],
+        args["output_dir"],
     )
 
     for filepath in filepaths:
@@ -153,7 +178,7 @@ def extract_transactions(spark: SparkSession, args: dict) -> DataFrame:
 
     Args:
         spark: SparkSession object.
-        args: Dictionary of arguments (from the get_args function).
+        args: Dictionary of arguments.
 
     Returns:
         Spark dataframe.
@@ -188,7 +213,7 @@ def extract_articles(spark: SparkSession, args: dict) -> DataFrame:
 
     Args:
         spark: SparkSession object.
-        args: Dictionary of arguments (from the get_args function).
+        args: Dictionary of arguments.
 
     Returns:
         Spark dataframe.
@@ -240,7 +265,7 @@ def extract_customers(spark: SparkSession, args: dict) -> DataFrame:
 
     Args:
         spark: SparkSession object.
-        args: Dictionary of arguments (from the get_args function).
+        args: Dictionary of arguments.
 
     Returns:
         Spark dataframe.
@@ -269,34 +294,17 @@ def extract_customers(spark: SparkSession, args: dict) -> DataFrame:
     return df
 
 
-@pandas_udf(StringType())  # type: ignore
-def to_upper_case(value: pd.Series) -> pd.Series:
-    return value.str.upper()
-
-
-@pandas_udf(DecimalType(PRICE_PRECISION, PRICE_SCALE))  # type: ignore
-def convert_price(
-    rates_map: pd.Series,
-    dm_currency_key: pd.Series,
-    price: pd.Series
-) -> pd.Series:
-    rate = rates_map.apply(lambda row: row.get(dm_currency_key[0], 1))
-    return price * rate
-
-
-def transform_data(
+def filter_transactions(
+    spark: SparkSession,
     transactions_df: DataFrame,
-    articles_df: DataFrame,
-    customers_df: DataFrame,
-    args: dict,
+    args: dict
 ) -> DataFrame:
-    """Filter, enrich, transform and aggregate data.
+    """Filter data. Exit if no data founded.
 
     Args:
+        spark: SparkSession object.
         transactions_df: Spark dataframe with transactions data.
-        articles_df: Spark dataframe with articles data.
-        customers_df: Spark dataframe with customers data.
-        args: Dictionary of arguments (from the get_args function).
+        args: Dictionary of arguments.
 
     Returns:
         Spark dataframe.
@@ -309,6 +317,49 @@ def transform_data(
         )
     )
 
+    if filtered_transactions_df.isEmpty():
+        spark.stop()
+        sys.exit(
+            f"No transactions data for the period "
+            f"from {args['date_start'].strftime('%Y-%m-%d')} "
+            f"to {args['date_end'].strftime('%Y-%m-%d')}"
+        )
+
+    return filtered_transactions_df
+
+
+@pandas_udf(StringType())  # type: ignore
+def to_upper_case(value: pd.Series) -> pd.Series:
+    return value.str.upper()
+
+
+@pandas_udf(DecimalType(PRICE_PRECISION, PRICE_SCALE))  # type: ignore
+def convert_price(
+    rates_map: pd.Series,
+    dm_currency: pd.Series,
+    price: pd.Series
+) -> pd.Series:
+    rate = rates_map.apply(lambda row: row.get(dm_currency[0], 1))
+    return price * rate
+
+
+def transform_data(
+    filtered_transactions_df: DataFrame,
+    articles_df: DataFrame,
+    customers_df: DataFrame,
+    args: dict,
+) -> DataFrame:
+    """Enrich, transform and aggregate data.
+
+    Args:
+        filtered_transactions_df: Spark dataframe with transactions data.
+        articles_df: Spark dataframe with articles data.
+        customers_df: Spark dataframe with customers data.
+        args: Dictionary of arguments.
+
+    Returns:
+        Spark dataframe.
+    """
     exchange_rate_schema = f"map<string, decimal({RATE_PRECISION}, {RATE_SCALE})>"
 
     converted_price_transactions_df = (
@@ -324,11 +375,15 @@ def transform_data(
         )
         .withColumn(
             "price",
-            convert_price(
-                col("current_exchange_rate"),  # type: ignore
-                col("dm_currency"),  # type: ignore
-                col("price")  # type: ignore
+            when(
+                col("currency") != col("dm_currency"),
+                convert_price(
+                    col("current_exchange_rate"),  # type: ignore
+                    col("dm_currency"),  # type: ignore
+                    col("price")  # type: ignore
+                )
             )
+            .otherwise(col("price"))
         )
     )
 
@@ -411,35 +466,21 @@ def transform_data(
     return aggregated_transactions_df
 
 
-def load_data(
-    transformed_df: DataFrame, args: dict, to_single_file: bool = True
-) -> None:
+def load_data(transformed_df: DataFrame, args: dict) -> None:
     """Load transformed data to a data_mart.csv file.
 
     Args:
         transformed_df: Spark dataframe with transformed data.
-        args: Dictionary of arguments (from the get_args function).
-        to_single_file: False for creating a spark-like directory.
-                        True for creating a single file. Defaults to True.
+        args: Dictionary of arguments.
+
     Returns:
         None.
     """
-    if to_single_file:
-        (
-            transformed_df
-            .toPandas()
-            .to_csv(args["data_mart_filepath"], sep=",", index=False)
-        )
-    else:
-        (
-            transformed_df
-            .coalesce(1)
-            .write.mode("overwrite")
-            .format("csv")
-            .option("header", "true")
-            .option("delimiter", ",")
-            .save(args["data_mart_filepath"])
-        )
+    (
+        transformed_df
+        .toPandas()
+        .to_csv(args["data_mart_filepath"], sep=",", index=False)
+    )
 
 
 def get_args() -> dict:
@@ -466,7 +507,7 @@ def get_args() -> dict:
         required=True,
         choices=["USD", "EUR", "BYN", "PLN"],
         metavar="<dm_currency>",
-        help=("Currency type for price conversion."),
+        help="Currency type for price conversion.",
     )
     parser.add_argument(
         "--data-dir",
@@ -474,13 +515,21 @@ def get_args() -> dict:
         required=True,
         metavar="<data_dir_path>",
         help=(
-            "Path to the directory with source files (transactions_train.csv, "
-            "articles.csv, customers.csv) and for the output file."
+            "Path to the directory with source files "
+            "(transactions_train_with_currency.csv, articles.csv, customers.csv) "
+            "and for the output file."
         ),
+    )
+    parser.add_argument(
+        "--output-dir",
+        type=str,
+        required=True,
+        metavar="<output_dir_path>",
+        help="Path to the output directory.",
     )
 
     return vars(parser.parse_args())
 
 
 if __name__ == "__main__":
-    main()
+    transactions_etl_job()
