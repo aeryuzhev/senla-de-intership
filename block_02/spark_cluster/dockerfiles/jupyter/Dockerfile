@@ -8,4 +8,5 @@ RUN wget https://dlcdn.apache.org/spark/spark-3.3.3/spark-3.3.3-bin-hadoop3.tgz 
     && mv spark-3.3.3-bin-hadoop3/ /usr/local/ \
     && rm -rf /usr/local/spark \
     && rm -rf /usr/local/spark-3.3.0-bin-hadoop3 \
-    && ln -s /usr/local/spark-3.3.3-bin-hadoop3 /usr/local/spark
+    && ln -s /usr/local/spark-3.3.3-bin-hadoop3 /usr/local/spark \
+    && pip install pandas
