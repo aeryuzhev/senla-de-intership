@@ -3,3 +3,4 @@ articles.csv
 customers.csv
 song_lyrics
 .ipynb_checkpoints
+__pycache__
