@@ -49,7 +49,6 @@ def run_prev_months_jobs(args: dict, number_of_months: int) -> None:
     """Create data mart files for the previous months if they do not exist.
 
     Args:
-        spark: SparkSession object.
         args: Dictionary of arguments.
         number_of_months: A number of previous months for creating data mart files.
     """

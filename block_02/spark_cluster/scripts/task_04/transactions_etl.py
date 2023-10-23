@@ -76,11 +76,10 @@ PRICE_PRECISION, PRICE_SCALE = 22, 16
 RATE_PRECISION, RATE_SCALE = 6, 2
 
 
-def transactions_etl_job(args=None) -> None:
+def transactions_etl_job(args: dict | None = None) -> None:
     """Main ETL function.
 
     Args:
-        spark: SparkSession object.
         args: Dictionary of arguments. Defaults to None.
 
     Returns:
