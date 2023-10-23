@@ -19,11 +19,9 @@ Example:
             --data-dir="/home/jovyan/work/data" \
             --output-dir="/home/jovyan/work/data/dm_transactions"
 """
-
 from pathlib import Path
 from dateutil.relativedelta import relativedelta
-
-from pyspark.sql import SparkSession
+from datetime import datetime
 
 from transactions_etl import transactions_etl_job, get_args
 
@@ -39,36 +37,15 @@ def run_jobs() -> None:
         None.
     """
     args = get_args()
+    initial_part_date_arg = args["part_date"]
 
-    spark = initialize_spark()
+    run_prev_months_jobs(args, NUMBER_OF_PREV_MONTHS)
 
-    transactions_etl_job(spark, args)
-
-    run_prev_months_jobs(spark, args, NUMBER_OF_PREV_MONTHS)
-
-    spark.stop()
+    args["part_date"] = initial_part_date_arg
+    transactions_etl_job(args)
 
 
-def initialize_spark() -> SparkSession:
-    """Initialize a new SparkSession.
-
-    Returns:
-        SparkSession object.
-    """
-    spark = (
-        SparkSession.builder
-        .master("spark://spark-master:7077")
-        .appName("transactions_etl")
-        .config("spark.sql.execution.arrow.pyspark.enabled", "true")
-        .getOrCreate()
-    )
-
-    spark.sparkContext.setLogLevel('ERROR')
-
-    return spark
-
-
-def run_prev_months_jobs(spark: SparkSession, args: dict, number_of_months: int) -> None:
+def run_prev_months_jobs(args: dict, number_of_months: int) -> None:
     """Create data mart files for the previous months if they do not exist.
 
     Args:
@@ -78,7 +55,11 @@ def run_prev_months_jobs(spark: SparkSession, args: dict, number_of_months: int)
     """
     for _ in range(1, number_of_months + 1):
         # Get the last day of the previous month.
-        prev_month_last_date = args["date_end"] - relativedelta(months=1)
+        prev_month_last_date = (
+            datetime.strptime(args["part_date"], "%Y-%m-%d")
+            + relativedelta(day=31)
+            - relativedelta(months=1)
+        )
         prev_month_last_date = prev_month_last_date.strftime("%Y-%m-%d")
 
         # Update the part_date in the args dict for execution with the date
@@ -89,7 +70,7 @@ def run_prev_months_jobs(spark: SparkSession, args: dict, number_of_months: int)
         prev_month_filepath = Path(f"{args['output_dir']}/{prev_month_last_date}.csv")
 
         if not prev_month_filepath.exists():
-            transactions_etl_job(spark, args)
+            transactions_etl_job(args)
 
 
 if __name__ == "__main__":

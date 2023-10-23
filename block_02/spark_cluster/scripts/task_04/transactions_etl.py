@@ -24,6 +24,7 @@ with the following fields:
     | number_of_product_groups | The number of product groups       |
     | dm_currency              | Currency type for price conversion |
 
+
 Args:
     --part-date: Date in YYYY-MM-DD format. Period for transactions data will be formed
                  based on the month of this date.
@@ -75,7 +76,7 @@ PRICE_PRECISION, PRICE_SCALE = 22, 16
 RATE_PRECISION, RATE_SCALE = 6, 2
 
 
-def transactions_etl_job(spark=None, args=None) -> None:
+def transactions_etl_job(args=None) -> None:
     """Main ETL function.
 
     Args:
@@ -85,7 +86,6 @@ def transactions_etl_job(spark=None, args=None) -> None:
     Returns:
         None.
     """
-
     if not args:
         args = get_args()
 
@@ -108,11 +108,7 @@ def transactions_etl_job(spark=None, args=None) -> None:
 
     check_paths(args)
 
-    if not spark:
-        spark = initialize_spark()
-        is_external_spark_session = False
-    else:
-        is_external_spark_session = True
+    spark = initialize_spark()
 
     transactions_df = extract_transactions(spark, args)
     articles_df = extract_articles(spark, args)
@@ -128,8 +124,7 @@ def transactions_etl_job(spark=None, args=None) -> None:
 
     load_data(transformed_data, args)
 
-    if not is_external_spark_session:
-        spark.stop()
+    spark.stop()
 
 
 def check_paths(args: dict) -> None:
@@ -478,8 +473,13 @@ def load_data(transformed_df: DataFrame, args: dict) -> None:
     """
     (
         transformed_df
-        .toPandas()
-        .to_csv(args["data_mart_filepath"], sep=",", index=False)
+        .repartition(1)
+        .write
+        .mode("overwrite")
+        .format("csv")
+        .option("header", "true")
+        .option("delimiter", ",")
+        .save(args["data_mart_filepath"])
     )
 
 
