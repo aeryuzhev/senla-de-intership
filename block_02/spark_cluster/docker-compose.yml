@@ -3,9 +3,10 @@ version: "3"
 services:
   jupyter-pyspark-cluster:
     build:
-      context: ./jupyter_docker
+      context: ./dockerfiles/jupyter
       dockerfile: Dockerfile
     container_name: jupyter-pyspark-cluster
+    user: jovyan
     ports:
       - 8888:8888
       - 4040:4040
@@ -30,7 +31,9 @@ services:
       - ./data:/home/jovyan/work/data
       - ./scripts:/home/jovyan/work/scripts
   spark-worker:
-    image: bitnami/spark:3.3.3
+    build:
+      context: ./dockerfiles/spark_worker
+      dockerfile: Dockerfile
     user: root
     environment:
       - SPARK_MODE=worker
