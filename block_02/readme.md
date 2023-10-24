@@ -118,3 +118,53 @@ ${SPARK_HOME}/bin/spark-submit \
 ### Result
 
 - [bigram_counts.csv](spark_cluster/data/bigram_counts.csv)
+
+## Task 05
+
+### Description
+
+The task is to create a data mart using only PySpark (without using Spark SQL queries) and calculate the price based on currency exchange rates. It must consists of the following columns:
+
+| Field name               | Description                                            |
+| ------------------------ | ------------------------------------------------------ |
+| part_date                | The last day of the month                              |
+| customer_id              | Customer ID                                            |
+| customer_group_by_age    | Customers age classification                           |
+| transaction_amount       | Total sum of purchases                                 |
+| most_exp_article_id      | The most expensive article                             |
+| number_of_articles       | The number of articles                                 |
+| number_of_product_groups | The number of product groups                           |
+| dm_currency              | Currency type for price conversion |
+
+### Technologies
+
+- PySpark
+
+### Scripts
+
+- [transactions_init.py](spark_cluster/scripts/task_04/transactions_init.py)
+- [transactions_etl.py](spark_cluster/scripts/task_04/transactions_etl.py)
+
+### Data sources
+
+Kaggle - H&M Personalized Fashion Recommendations:
+
+- [articles.csv](https://www.kaggle.com/competitions/h-and-m-personalized-fashion-recommendations/data?select=articles.csv)
+- [customers.csv](https://www.kaggle.com/competitions/h-and-m-personalized-fashion-recommendations/data?select=articles.csv)
+- [transactions_train.csv](https://www.kaggle.com/competitions/h-and-m-personalized-fashion-recommendations/data?select=articles.csv) (with manually added currency exchange rates)
+
+### Usage
+
+```bash
+${SPARK_HOME}/bin/spark-submit \
+    --py-files "/home/jovyan/work/scripts/task_04/transactions_etl.py" \
+    /home/jovyan/work/scripts/task_04/transactions_init.py \
+        --part-date="2018-12-31" \
+        --dm-currency="BYN" \
+        --data-dir="/home/jovyan/work/data" \
+        --output-dir="/home/jovyan/work/data/dm_transactions"
+```
+
+### Result
+
+- [dm_transactions](spark_cluster/data/dm_transactions)
