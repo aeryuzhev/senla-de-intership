@@ -2,7 +2,7 @@ FROM jupyter/pyspark-notebook:python-3.9
 
 USER root
 
-RUN wget https://dlcdn.apache.org/spark/spark-3.3.3/spark-3.3.3-bin-hadoop3.tgz \
+RUN wget https://archive.apache.org/dist/spark/spark-3.3.3/spark-3.3.3-bin-hadoop3.tgz \
     && tar zxvf spark-3.3.3-bin-hadoop3.tgz \
     && rm -rf spark-3.3.3-bin-hadoop3.tgz \
     && mv spark-3.3.3-bin-hadoop3/ /usr/local/ \
