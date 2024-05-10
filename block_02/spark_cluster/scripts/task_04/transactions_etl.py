@@ -76,7 +76,7 @@ PRICE_PRECISION, PRICE_SCALE = 22, 16
 RATE_PRECISION, RATE_SCALE = 6, 2
 
 
-def transactions_etl_job(args: dict | None = None) -> None:
+def transactions_etl_job(args: dict = None) -> None:
     """Main ETL function.
 
     Args:
