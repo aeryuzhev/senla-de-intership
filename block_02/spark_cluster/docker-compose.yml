@@ -6,11 +6,18 @@ services:
       context: ./dockerfiles/jupyter
       dockerfile: Dockerfile
     container_name: jupyter-pyspark-cluster
-    user: jovyan
+    user: root
     ports:
       - 8888:8888
       - 4040:4040
-    command: "start-notebook.sh --NotebookApp.token='' --NotebookApp.password=''"
+    command: 
+      - /bin/bash
+      - -c
+      - |
+        chown 1000:100 -R /home/jovyan/work/data 
+        chown 1000:100 -R /home/jovyan/work/notebooks 
+        chown 1000:100 -R /home/jovyan/work/scripts
+        start-notebook.sh --NotebookApp.token='' --NotebookApp.password=''
     volumes:
       - ./data:/home/jovyan/work/data
       - ./notebooks:/home/jovyan/work/notebooks
