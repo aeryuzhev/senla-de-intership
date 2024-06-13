@@ -42,11 +42,11 @@ Example:
     ${SPARK_HOME}/bin/spark-submit \
         --py-files "/home/jovyan/work/scripts/task_05/transactions_etl.py" \
         /home/jovyan/work/scripts/task_05/transactions_init.py \
-            --part-date="2019-12-31" \
+            --part-date="2018-12-31" \
             --dm-currency="BYN" \
             --loyality-level=3 \
             --data-dir="/home/jovyan/work/data" \
-            --output-dir="/home/jovyan/work/data/dm_transactions"
+            --output-dir="/home/jovyan/work/data/dm_transactions_loyality"
 """
 import argparse
 from datetime import datetime
