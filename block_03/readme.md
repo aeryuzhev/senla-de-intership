@@ -4,7 +4,7 @@
 
 ### Description
 
-The final task is to create a data mart using only SQL. It must consists of the following columns:
+The final task is to create a data mart using only Pandas. It must consists of the following columns:
 
 | Field name               | Description                                            |
 | ------------------------ | ------------------------------------------------------ |
