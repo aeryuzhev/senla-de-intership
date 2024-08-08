@@ -186,3 +186,115 @@ The fundamental idea of YARN is to split up the functionalities of resource mana
 | Use Cases    | Simple, flat data structures and smaller datasets where human readability is crucial    | Data interchange between web applications and APIs, especially when dealing with complex data structures    | Data interchange between web services and applications, especially when dealing with hierarchical data structures    | Data serialization and storage in Hadoop ecosystem, especially when dealing with evolving schemas    | Data analysis and processing in Hadoop ecosystem, especially when dealing with large datasets and analytical queries    | Data analysis and processing in Hadoop ecosystem, especially when dealing with large datasets and analytical queries|
 
 ![Alt text](images/avro_parquet_orc.png)
+
+## CAP | PACELC
+CAP and PACELC theorems are fundamental concepts in the field of distributed systems, particularly relevant to understanding the trade-offs in designing distributed databases. Here’s a detailed explanation of each:
+
+### CAP Theorem
+
+The CAP Theorem, introduced by Eric Brewer, states that it is impossible for a distributed data store to simultaneously provide more than two out of the following three guarantees:
+
+- **Consistency (C):** Every read receives the most recent write or an error.
+- **Availability (A):** Every request receives a (non-error) response, without guarantee that it contains the most recent write.
+- **Partition Tolerance (P):** The system continues to operate despite an arbitrary number of messages being dropped (or delayed) by the network between nodes.
+
+In other words, in the presence of a network partition, a system can choose either consistency or availability, but not both. This theorem is often visualized with a triangle, where each corner represents one of the guarantees, and any given system can be at most on two corners at the same time.
+
+### PACELC Theorem
+
+The PACELC theorem, proposed by Daniel J. Abadi, extends the CAP theorem by considering the trade-offs that occur not only during a network partition but also during normal operation. PACELC stands for:
+
+- **P:** Partition Tolerance
+- **A:** Availability
+- **C:** Consistency
+- **E:** Else
+- **L:** Latency
+- **C:** Consistency
+
+The theorem can be summarized as:
+
+- **If a partition occurs (P),** then the system must trade off between Availability (A) and Consistency (C).
+- **Else (E),** when the system is running normally without partitions, it must trade off between Latency (L) and Consistency (C).
+
+Thus, PACELC adds a second dimension to the trade-offs by explicitly recognizing that even in the absence of partitions, distributed systems need to balance latency and consistency.
+
+### Key Differences and Applications
+
+- **CAP Theorem** focuses on the behavior during a network partition and the trade-offs between consistency and availability in such scenarios.
+- **PACELC Theorem** broadens the perspective by including the trade-offs between latency and consistency during normal operations, providing a more comprehensive framework for understanding the performance and consistency trade-offs in distributed systems.
+
+### Practical Implications
+
+- **CAP Theorem:** In real-world systems, designers often have to choose between:
+
+    - CP systems (Consistency + Partition tolerance): Examples include HBase, MongoDB (configurable), and Redis (configured as CP).
+    - AP systems (Availability + Partition tolerance): Examples include Cassandra, Couchbase, and DynamoDB.
+- **PACELC Theorem:** It helps in understanding that even when there is no partition (the common case), there is a trade-off between consistency and latency:
+    - CA/EL systems prioritize consistency over latency, e.g., traditional relational databases.
+    - CL systems prioritize low latency over consistency, e.g., some configurations of NoSQL databases like Cassandra when tuned for high performance.
+
+## Lambda | Kappa
+
+Lambda and Kappa architectures are two popular design patterns for processing large-scale data in distributed systems, particularly in the context of big data. Both architectures aim to handle high-throughput data processing and real-time analytics, but they do so in different ways, each with its own strengths and trade-offs.
+
+### Lambda Architecture
+
+**Overview:**
+
+Lambda Architecture, introduced by Nathan Marz, is a data processing architecture designed to handle massive quantities of data by splitting the processing into two parallel paths:
+
+1. **Batch layer:** The batch layer would process large volumes of data in its raw, unprocessed form, which could include data such as user demographics, posts, likes, shares, and comments. The data would be stored in a distributed file system like Hadoop Distributed File System (HDFS), and batch processing tools like Apache Spark or Hadoop MapReduce would be used to process the data. The batch layer would generate batch views, such as daily or weekly aggregates of user behavior data.
+
+2. **Speed layer:** The speed layer would process real-time data streams as they arrive, such as user activity data like pageviews, clicks, and shares. The speed layer would use a stream processing framework like Apache Kafka or Apache Storm to process the data in real-time, and the output would be fed into the serving layer. The speed layer would generate real-time views, such as trending topics, popular posts, or user engagement rates.
+
+3. **Serving layer:** The serving layer would combine the output of both the batch and speed layers to provide a unified view of the data. It would store the processed data in a database like Apache Cassandra, and a query engine like Apache Hive or Presto would serve the data to the end-users. The serving layer would enable product teams to access the data in real-time and perform ad-hoc queries, such as analyzing user behavior by demographics or user segments, identifying influencers, or recommending content.
+
+**Pros:**
+
+- **Fault Tolerance:** The architecture is robust against faults, as raw data is stored permanently and can always be reprocessed.
+- **Accuracy and Completeness:** The batch layer ensures that the data processing results are accurate and consistent.
+- **Flexibility:** Can handle both real-time and batch processing requirements.
+
+**Cons:**
+
+- **Complexity:** Maintaining two separate processing paths (batch and speed) increases system complexity, leading to challenges in development, testing, and operations.
+- **Redundancy:** Data processing logic needs to be implemented twice, once in the batch layer and once in the speed layer.
+
+### Kappa Architecture
+
+**Overview:**
+
+Kappa Architecture, proposed by Jay Kreps, is a simplified variant of the Lambda Architecture. It aims to reduce the complexity by using a single processing pipeline, relying solely on real-time stream processing.
+
+1. **Data ingestion:** The social media company would collect data from user activities such as likes, shares, comments, and pageviews in real time. The data would be ingested into the system using a messaging system like Apache Kafka.
+
+1. **Stream processing:** The data would be processed in real-time using a stream processing system like Apache Kafka Streams, Apache Flink, or Apache Samza. The stream processing system would analyze the user activity data and compute real-time metrics like engagement rates, popular posts, and trending topics. The processed data would be stored in a distributed database like Apache Cassandra.
+
+1. **Serving layer:** The processed data would be served to end-users using a query engine like Apache Hive or Presto. The end-users could access the data in real-time and perform ad-hoc queries to analyze user behavior by demographics or user segments, identify influencers, or recommend content.
+
+**Pros:**
+
+- **Simplicity:** The architecture is simpler to manage and operate since there’s only one processing path.
+- **Consistency:** Ensures that all data, whether processed in real-time or later reprocessed, goes through the same pipeline, reducing the likelihood of inconsistencies.
+- **Scalability:** Stream processing systems can scale to handle high-throughput data streams.
+
+**Cons:**
+
+- **Complexity in Stream Processing:** While simpler overall, Kappa requires a robust, capable stream processing system that can handle both real-time and large-scale historical data processing, which can be challenging to implement correctly.
+- **Eventual Consistency:** Depending on the implementation, it may take time for all data to be processed and reach a consistent state, particularly when reprocessing historical data.
+
+### When to Use Lambda vs. Kappa
+
+**Lambda Architecture:**
+
+- Ideal for scenarios where batch processing is necessary or where historical accuracy and consistency are critical.
+- Useful when there is a clear distinction between real-time and batch processing needs.
+- Examples include financial systems requiring detailed batch processing and analytics systems that need to reconcile real-time data with large historical datasets.
+
+**Kappa Architecture:**
+
+- Best suited for scenarios where simplicity and real-time processing are paramount.
+- Ideal for environments where the processing logic is likely to evolve over time, necessitating reprocessing of historical data.
+- Examples include continuous data streams such as logs, sensor data, or event-driven systems.
+
+Both architectures are powerful tools in the big data ecosystem, and the choice between them depends on the specific requirements of the application, such as the need for real-time analytics, historical accuracy, system complexity, and fault tolerance.
